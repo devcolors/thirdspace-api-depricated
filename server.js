@@ -111,16 +111,25 @@ router.post('/users_bulk', async (req, res) => {
 
       const downloadStream = bucket.openDownloadStream(userFound.profilePicture);
 
-      downloadStream.on('error', function(error) {
-        res.status(500).send('Error fetching image. Make sure the image is exist and ID is correct.');
+      let chunks = [];
+      downloadStream.on('data', (chunk) => {
+        chunks.push(chunk);
       });
 
-      res.setHeader('Content-Type', 'image/jpeg'); // Adjust MIME type as necessary
-      downloadStream.pipe(res);
-    } catch (error) {
-      console.log(error)
-      res.status(500).send(error);
-    }
+      downloadStream.on('error', function(error) {
+        res.status(500).send({ errorMsg: 'Error fetching image. Make sure the image exists and the ID is correct.', err: error});
+      });
+
+      downloadStream.on('end', () => {
+        let result = Buffer.concat(chunks);
+
+        let base64Image = Buffer.from(result).toString('base64');    
+        res.send(base64Image);
+      });
+      } catch (error) {
+        console.log(error)
+        res.status(500).send(error);
+      }
 });
   
   // Delete (DELETE)
