@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {getImage} = require('../helpers')
+const {getImage} = require('./helpers')
 const mongoose = require('mongoose');
 
 // Read (GET) any base64Image using fileID
