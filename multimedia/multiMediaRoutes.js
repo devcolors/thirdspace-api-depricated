@@ -20,4 +20,44 @@ router.get('/image/:fileId/:bucketName', async (req, res) => {
     res.send(base64Image)
 });
 
+// Route to stream video
+router.get('/video/:fileId/:bucketName', async (req, res) => {
+    try {
+      const fileId = new mongoose.Types.ObjectId(req.params.fileId);
+      const bucketName = req.params.bucketName; // Set your bucket name accordingly
+  
+      const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+        bucketName: bucketName
+      });
+  
+      const downloadStream = bucket.openDownloadStream(fileId);
+  
+      downloadStream.on('file', (file) => {
+        if (!file) {
+          return res.status(404).send('No video exists');
+        }
+  
+        // Set the appropriate response headers for video streaming
+        res.setHeader('Content-Type', file.contentType);
+        res.setHeader('Content-Length', file.length);
+      });
+  
+      downloadStream.on('data', (chunk) => {
+        res.write(chunk);
+      });
+  
+      downloadStream.on('error', (error) => {
+        console.error(error);
+        res.status(500).send('Server error');
+      });
+  
+      downloadStream.on('end', () => {
+        res.end();
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+  });
+
 module.exports = router;

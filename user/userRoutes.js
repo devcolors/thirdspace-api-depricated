@@ -90,30 +90,62 @@ router.post('/users', async (req, res) => {
   }
 });
 
-// Create a new post for a specific user
-router.post('/users/:id/post', pictureUpload.single('imageFile'), async (req, res) => {
-console.log('creating post');
-console.log('form data:\n', req.body);
-try {
-  const userFound = await user.findById(req.params.id);
-  if (!userFound) {
-    return res.status(404).send('User not found');
+// Create a new image post for a specific user
+router.post('/users/:id/post-image', pictureUpload.single('imageFile'), async (req, res) => {
+  console.log('creating image post');
+  console.log('form data:\n', req.body);
+  try {
+    const userFound = await user.findById(req.params.id);
+    if (!userFound) {
+      return res.status(404).send('User not found');
+    }
+
+    console.log("file: ", req.file ? req.file.id : "no file")
+    console.log("text:", req.body.text ? req.body.text : "no text")
+    
+    const post = {
+      text: req.body.text ? req.body.text : null,
+      imageFile: req.file ? new mongoose.Types.ObjectId(req.file.id) : null,
+      id: Date.now().toString()
+    }
+
+    userFound.posts = [...userFound.posts, post]
+    await userFound.save();
+    
+    res.status(200).send(post);
+  } catch (error) {
+    console.log(error)
+    res.status(500).send(error);
   }
-  console.log(req.file ? req.file.id : "no file")
-  console.log(req.body.text)
-  const post = {
-    text: req.body.text,
-    imageFile: req.file ? new mongoose.Types.ObjectId(req.file.id) : undefined,
-    id: Date.now().toString()
+});
+
+// Create a new video post for a specific user
+router.post('/users/:id/post-video', videoUpload.single('videoFile'), async (req, res) => {
+  console.log('creating video post');
+  console.log('form data:\n', req.body);
+  try {
+    const userFound = await user.findById(req.params.id);
+    if (!userFound) {
+      return res.status(404).send('User not found');
+    }
+
+    console.log("file: ", req.file ? req.file.id : "no file")
+    console.log("text:", req.body.text ? req.body.text : "no text")
+    
+    const post = {
+      text: req.body.text ? req.body.text : null,
+      videoFile: req.file ? new mongoose.Types.ObjectId(req.file.id) : null,
+      id: Date.now().toString()
+    }
+
+    userFound.posts = [...userFound.posts, post]
+    await userFound.save();
+    
+    res.status(200).send(post);
+  } catch (error) {
+    console.log(error)
+    res.status(500).send(error);
   }
-  userFound.posts = [...userFound.posts, post]
-  await userFound.save();
-  
-  res.status(200).send(userFound);
-} catch (error) {
-  console.log(error)
-  res.status(500).send(error);
-}
 });
 
 // Create a bunch of users

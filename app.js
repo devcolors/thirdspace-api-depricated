@@ -27,7 +27,7 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 
 // Define a simple route
 app.get('/', (req, res) => {
-  res.send('Welcome to the CRUD API!');
+  res.sendFile(__dirname + "/multimedia/video_test.html");
 });
 
 // Start server
