@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const user = require('./user'); // Adjust this to the correct path of your model
-const {pictureUpload, videoUpload} = require('../multimedia/multerstorage')
+const {pictureUpload, videoUpload, upload} = require('../multimedia/multerstorage')
 const mongoose = require('mongoose');
 
 // --------- GET ---------
@@ -135,6 +135,39 @@ router.post('/users/:id/post-video', videoUpload.single('videoFile'), async (req
     const post = {
       text: req.body.text ? req.body.text : null,
       videoFile: req.file ? new mongoose.Types.ObjectId(req.file.id) : null,
+      id: Date.now().toString()
+    }
+
+    userFound.posts = [...userFound.posts, post]
+    await userFound.save();
+    
+    res.status(200).send(post);
+  } catch (error) {
+    console.log(error)
+    res.status(500).send(error);
+  }
+});
+
+// Create a new image post for a specific user
+router.post('/users/:id/post-media', upload.array('files', 10), async (req, res) => {
+  console.log('creating media posts');
+  console.log('form data:\n', req.body);
+  try {
+    const userFound = await user.findById(req.params.id);
+    if (!userFound) {
+      return res.status(404).send('User not found');
+    }
+
+    const imageFiles = req.files ? req.files.filter(file => file.mimetype.startsWith('image')) : []
+    const videoFiles = req.files ? req.files.filter(file => file.mimetype.startsWith('video')) : []
+
+    console.log("file ids: ", req.files ? req.files.map(file => file.id) : "no file")
+    console.log("text:", req.body.text ? req.body.text : "no text")
+    
+    const post = {
+      text: req.body.text ? req.body.text : null,
+      imageFiles: imageFiles.map(file => new mongoose.Types.ObjectId(file.id)),
+      videoFiles: videoFiles.map(file => new mongoose.Types.ObjectId(file.id)),
       id: Date.now().toString()
     }
 

@@ -3,6 +3,17 @@ const { GridFsStorage } = require('multer-gridfs-storage');
 const Grid = require('gridfs-stream');
 require('dotenv').config();
 
+// Configure multer storage for both images and videos
+const storage = new GridFsStorage({
+  url: process.env.MONGO_URI,
+  file: (req, file) => {
+    return {
+      bucketName: file.mimetype.startsWith('image') ? 'profilePictures' : 'profileVideos',
+      filename: 'file_' + Date.now()
+    };
+  }
+});
+
 // Function to determine if a file is an image
 const pictureFileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image/')) {
@@ -43,5 +54,6 @@ const videoStorage = new GridFsStorage({
 
 const videoUpload = multer({ storage: videoStorage, fileFilter: videoFileFilter });
 const pictureUpload = multer({ storage: pictureStorage, fileFilter: pictureFileFilter });
+const upload = multer({ storage: storage });
 
-module.exports = { pictureUpload, videoUpload }; // Export both upload functions
+module.exports = { pictureUpload, videoUpload, upload }; // Export both upload functions
